@@ -18,6 +18,9 @@ headers = {
 }
 
 def send_text(to, text):
+    """
+    Sends a standard text message to a specific WhatsApp number.
+    """
     url = f"{BASE_URL}/messages"
     payload = {
         "messaging_product": "whatsapp",
@@ -31,6 +34,9 @@ def send_text(to, text):
     return response.json()
 
 def send_audio(to, audio_file_path):
+    """
+    Uploads and sends an audio file/voice note to a user.
+    """
     media_id = upload_media(audio_file_path)
     
     url = f"{BASE_URL}/messages"
@@ -45,6 +51,9 @@ def send_audio(to, audio_file_path):
     return response.json()
 
 def upload_media(file_path):
+    """
+    Uploads a local file to Meta's media servers and returns the media ID.
+    """
     url = f"https://graph.facebook.com/{VERSION}/{PHONE_NUMBER_ID}/media"
     headers_upload = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
     
@@ -59,6 +68,9 @@ def upload_media(file_path):
     return response.json().get("id")
 
 def download_media(media_id):
+    """
+    Retrieves the download URL for a media ID and saves it to the local downloads folder.
+    """
     url = f"https://graph.facebook.com/{VERSION}/{media_id}"
     headers_dl = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
     
