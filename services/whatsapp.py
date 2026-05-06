@@ -1,5 +1,6 @@
 # Meta API (Send/Receive/Download)
 
+import uuid
 import os
 import requests
 from dotenv import load_dotenv
@@ -78,10 +79,11 @@ def download_media(media_id):
     res = requests.get(url, headers=headers_dl, timeout=10)
     download_url = res.json().get("url")
 
+    unique_name = f"{uuid.uuid4()}.ogg" # Unique ID
+
     # Added timeout=30 (Voice notes can be large sometimes)
     media_res = requests.get(download_url, headers=headers_dl, timeout=30)
-
-    file_path = f"downloads/{media_id}.ogg"
+    file_path = f"downloads/{unique_name}"
     os.makedirs("downloads", exist_ok=True)
 
     with open(file_path, "wb") as f:
