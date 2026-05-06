@@ -8,6 +8,10 @@ import os
 
 app = FastAPI()
 
+@app.get("/")
+async def home():
+    return {"status": "HMS Agent is Online"}
+
 
 @app.get("/webhook")
 async def verify(request: Request):
