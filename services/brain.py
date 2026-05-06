@@ -1,9 +1,6 @@
-# Gemini Lead Qualification
-
-import google.generativeai as genai
 import os
-
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+import requests
+import json
 
 HMS_KNOWLEDGE = """
 You are 'Ayesha', a professional medical assistant at Sargodha Health HMS.
@@ -20,15 +17,79 @@ Rules:
 """
 
 def get_ai_response(user_input: str):
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    response = model.generate_content(f"{HMS_KNOWLEDGE}\n\nUser: {user_input}")
+    prompt = f"{HMS_KNOWLEDGE}\n\nUser: {user_input}"
+    
+    providers = [
+        {
+            "name": "Gemini",
+            "type": "gemini",
+            "url": f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={os.getenv('GEMINI_API_KEY')}",
+            "body": {
+                "contents": [{"parts": [{"text": prompt}]}]
+            }
+        },
+        {
+            "name": "Groq",
+            "type": "openai",
+            "url": "https://api.groq.com/openai/v1/chat/completions",
+            "headers": {"Authorization": f"Bearer {os.getenv('GROQ_API_KEY')}", "Content-Type": "application/json"},
+            "body": {
+                "model": "llama-3.3-70b-versatile",
+                "messages": [{"role": "user", "content": prompt}]
+            }
+        },
+        {
+            "name": "SiliconFlow",
+            "type": "openai",
+            "url": "https://api.siliconflow.cn/v1/chat/completions",
+            "headers": {"Authorization": f"Bearer {os.getenv('SILICON_API_KEY')}", "Content-Type": "application/json"},
+            "body": {
+                "model": "deepseek-ai/DeepSeek-V3",
+                "messages": [{"role": "user", "content": prompt}]
+            }
+        }
+    ]
 
-    # Simple parsing to separate score from text
-    text = response.text
+    text = ""
+    for p in providers:
+        try:
+            if p["type"] == "gemini":
+                response = requests.post(p["url"], json=p["body"], headers={"Content-Type": "application/json"})
+                if response.status_code == 200:
+                    result = response.json()
+                    text = result["candidates"][0]["content"]["parts"][0]["text"]
+                    print(f"✅ Success with {p['name']}")
+                    break
+                else:
+                    print(f"❌ {p['name']} failed with status {response.status_code}: {response.text}")
+                    
+            elif p["type"] == "openai":
+                response = requests.post(p["url"], json=p["body"], headers=p["headers"])
+                if response.status_code == 200:
+                    result = response.json()
+                    text = result["choices"][0]["message"]["content"]
+                    print(f"✅ Success with {p['name']}")
+                    break
+                else:
+                    print(f"❌ {p['name']} failed with status {response.status_code}: {response.text}")
+        except Exception as e:
+            print(f"❌ {p['name']} error: {e}")
+            continue
+
+    if not text:
+        return 0, "I apologize, but all our systems are currently down. Please try again later."
+
+    # Parse response
     score = 0
-
     if "SCORE:" in text:
-        score = int(text.split("SCORE:")[1].split("\n")[0].strip())
+        try:
+            score_str = text.split("SCORE:")[1].split("\n")[0].strip()
+            # remove non-digits
+            score_str = ''.join(filter(str.isdigit, score_str))
+            score = int(score_str) if score_str else 0
+        except Exception:
+            score = 0
+            
     reply = text.split("REPLY:")[1].strip() if "REPLY:" in text else text
 
     return score, reply

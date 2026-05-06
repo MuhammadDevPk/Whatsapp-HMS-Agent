@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, Response, BackgroundTasks
+from fastapi.responses import PlainTextResponse
 from services.whatsapp import send_text, send_audio, download_media
 from services.stt import transcribe_audio
 from services.brain import get_ai_response
@@ -17,8 +18,8 @@ async def home():
 async def verify(request: Request):
     params = request.query_params
     if params.get("hub.verify_token") == os.getenv("VERIFY_TOKEN"):
-        return Response(content=params.get("hub.challenge"))
-    return "Verification Failed"
+        return PlainTextResponse(content=params.get("hub.challenge"), status_code=200)
+    return PlainTextResponse(content="Verification Failed", status_code=403)
 
 
 def process_agent_logic(data: dict):
