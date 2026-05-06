@@ -57,15 +57,16 @@ def upload_media(file_path):
     """
     url = f"https://graph.facebook.com/{VERSION}/{PHONE_NUMBER_ID}/media"
     headers_upload = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
-
-    files = {
-        "file": (os.path.basename(file_path), open(file_path, "rb"), "audio/mpeg"),
-        "type": (None, "audio/mpeg"),
-        "messaging_product": (None, "whatsapp"),
-    }
-
-    # Increased timeout to 20 for uploads
-    response = requests.post(url, headers=headers_upload, files=files, timeout=20)
+    
+    with open(file_path, "rb") as f:
+        files = {
+            "file": (os.path.basename(file_path), f, "audio/mpeg"),
+            "type": (None, "audio/mpeg"),
+            "messaging_product": (None, "whatsapp"),
+        }
+        # Increased timeout to 20 for uploads
+        response = requests.post(url, headers=headers_upload, files=files, timeout=20)
+    
     return response.json().get("id")
 
 def download_media(media_id):
