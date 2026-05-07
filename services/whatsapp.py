@@ -32,6 +32,7 @@ def send_text(to, text):
     }
     # Added timeout=10
     response = requests.post(url, json=payload, headers=headers, timeout=10)
+    print(f"WhatsApp API Response (send_text): {response.status_code} - {response.text}")
     return response.json()
 
 def send_audio(to, audio_file_path):
@@ -49,6 +50,7 @@ def send_audio(to, audio_file_path):
     }
     # Added timeout=10
     response = requests.post(url, json=payload, headers=headers, timeout=10)
+    print(f"WhatsApp API Response (send_audio): {response.status_code} - {response.text}")
     return response.json()
 
 def upload_media(file_path):
